@@ -20,10 +20,10 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Streamlink & yt-dlp
+      - name: Install yt-dlp
         run: |
           python -m pip install --upgrade pip
-          pip install --upgrade streamlink yt-dlp
+          pip install --upgrade yt-dlp
 
       - name: Start Live Stream Loop
         env:
@@ -31,13 +31,20 @@ jobs:
           YT_URL: "https://www.youtube.com/live/uYIwz9Wv6tk"
         run: |
           while true; do
-            echo "Connecting Stream..."
+            echo "Fetching direct stream URL from YouTube..."
             
-            streamlink --retry-streams 10 --retry-max 5 --default-stream best "$YT_URL" stdout | \
-            ffmpeg -re -i pipe:0 \
-            -c:v copy -c:a aac -b:a 160k -ar 44100 \
-            -f flv "rtmp://live.twitch.tv/app/$TWITCH_KEY" || true
+            # Get direct video/audio stream URL using yt-dlp
+            DIRECT_URL=$(yt-dlp -g --format "best[ext=mp4]/best" "$YT_URL" 2>/dev/null || true)
             
+            if [ -n "$DIRECT_URL" ]; then
+              echo "Connecting to Twitch..."
+              ffmpeg -re -i "$DIRECT_URL" \
+              -c:v copy -c:a aac -b:a 160k -ar 44100 \
+              -f flv "rtmp://maa.contribute.live-video.net/app/$TWITCH_KEY" || true
+            else
+              echo "Failed to get stream URL or stream ended."
+            fi
+
             echo "Stream disconnected. Reconnecting in 10 seconds..."
             sleep 10
           done
