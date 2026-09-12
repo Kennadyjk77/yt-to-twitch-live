@@ -1,23 +1,44 @@
 name: Restream YouTube to Twitch
 
 on:
-  workflow_dispatch: # 手動 (Manual)-ஆக run செய்ய
+  workflow_dispatch:
 
 jobs:
   stream:
     runs-on: ubuntu-latest
     steps:
-      - name: Install dependencies
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install System Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
-          pip install streamlink yt-dlp
 
-      - name: Start Live Stream to Twitch
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Streamlink & yt-dlp
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade streamlink yt-dlp
+
+      - name: Start Live Stream Loop
         env:
-          TWITCH_KEY: ${{ secrets.TWITCH_STREAM_KEY }}
+          # GitHub Secrets-ல் இருந்து Key பாதுகாப்பாக எடுக்கப்படும்
+          TWITCH_KEY: ${{ live_1539119064_M7lU69DxFoKKOIwNoqOR4bWKOtaLiH }}
           YT_URL: "https://www.youtube.com/live/uYIwz9Wv6tk"
         run: |
-          streamlink --default-stream best "$YT_URL" stdout | \
-          ffmpeg -re -i pipe:0 -c:v copy -c:a aac -b:a 160k -ar 44100 \
-          -f flv "rtmp://live.twitch.tv/app/live_1539119064_M7lU69DxFoKKOIwNoqOR4bWKOtaLiH"
+          while true; do
+            echo "Connecting Stream..."
+            
+            streamlink --retry-streams 10 --retry-max 5 --default-stream best "$YT_URL" stdout | \
+            ffmpeg -re -i pipe:0 \
+            -c:v copy -c:a aac -b:a 160k -ar 44100 \
+            -f flv "rtmp://live.twitch.tv/app/$TWITCH_KEY" || true
+            
+            echo "Stream disconnected. Reconnecting in 10 seconds..."
+            sleep 10
+          done
