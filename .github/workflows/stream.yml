@@ -31,10 +31,10 @@ jobs:
           YT_URL: "https://www.youtube.com/live/uYIwz9Wv6tk"
         run: |
           while true; do
-            echo "Fetching direct stream URL from YouTube..."
+            echo "Fetching direct stream URL from YouTube using Android Client..."
             
-            # Get direct video/audio stream URL using yt-dlp
-            DIRECT_URL=$(yt-dlp -g --format "best[ext=mp4]/best" "$YT_URL" 2>/dev/null || true)
+            # Bypassing Bot Detection using Extractor Args & Player Clients
+            DIRECT_URL=$(yt-dlp -g --extractor-args "youtube:player_client=android,web" --format "best[ext=mp4]/best" "$YT_URL" 2>/dev/null || true)
             
             if [ -n "$DIRECT_URL" ]; then
               echo "Connecting to Twitch..."
