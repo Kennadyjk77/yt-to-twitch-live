@@ -1,0 +1,23 @@
+name: Restream YouTube to Twitch
+
+on:
+  workflow_dispatch: # 手動 (Manual)-ஆக run செய்ய
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          pip install streamlink yt-dlp
+
+      - name: Start Live Stream to Twitch
+        env:
+          TWITCH_KEY: ${{ secrets.TWITCH_STREAM_KEY }}
+          YT_URL: "https://www.youtube.com/live/uYIwz9Wv6tk"
+        run: |
+          streamlink --default-stream best "$YT_URL" stdout | \
+          ffmpeg -re -i pipe:0 -c:v copy -c:a aac -b:a 160k -ar 44100 \
+          -f flv "rtmp://live.twitch.tv/app/$TWITCH_KEY"
