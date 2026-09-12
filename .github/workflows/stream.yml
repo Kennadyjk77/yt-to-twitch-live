@@ -20,4 +20,4 @@ jobs:
         run: |
           streamlink --default-stream best "$YT_URL" stdout | \
           ffmpeg -re -i pipe:0 -c:v copy -c:a aac -b:a 160k -ar 44100 \
-          -f flv "rtmp://live.twitch.tv/app/$TWITCH_KEY"
+          -f flv "rtmp://live.twitch.tv/app/live_1539119064_M7lU69DxFoKKOIwNoqOR4bWKOtaLiH"
