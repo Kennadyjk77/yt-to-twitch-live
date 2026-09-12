@@ -27,8 +27,7 @@ jobs:
 
       - name: Start Live Stream Loop
         env:
-          # GitHub Secrets-ல் இருந்து Key பாதுகாப்பாக எடுக்கப்படும்
-          TWITCH_KEY: ${{ live_1539119064_M7lU69DxFoKKOIwNoqOR4bWKOtaLiH }}
+          TWITCH_KEY: ${{ secrets.TWITCH_STREAM_KEY }}
           YT_URL: "https://www.youtube.com/live/uYIwz9Wv6tk"
         run: |
           while true; do
