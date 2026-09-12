@@ -25,16 +25,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install --upgrade yt-dlp
 
+      - name: Decode Cookies File
+        env:
+          COOKIES_BASE64: ${{ secrets.YT_COOKIES_BASE64 }}
+        run: |
+          echo "$COOKIES_BASE64" | base64 -d > cookies.txt
+
       - name: Start Live Stream Loop
         env:
           TWITCH_KEY: ${{ secrets.TWITCH_STREAM_KEY }}
           YT_URL: "https://www.youtube.com/live/uYIwz9Wv6tk"
         run: |
           while true; do
-            echo "Fetching direct stream URL from YouTube using Android Client..."
+            echo "Fetching direct stream URL using Cookies..."
             
-            # Bypassing Bot Detection using Extractor Args & Player Clients
-            DIRECT_URL=$(yt-dlp -g --extractor-args "youtube:player_client=android,web" --format "best[ext=mp4]/best" "$YT_URL" 2>/dev/null || true)
+            DIRECT_URL=$(yt-dlp --cookies cookies.txt -g --format "best[ext=mp4]/best" "$YT_URL" 2>/dev/null || true)
             
             if [ -n "$DIRECT_URL" ]; then
               echo "Connecting to Twitch..."
@@ -42,7 +47,7 @@ jobs:
               -c:v copy -c:a aac -b:a 160k -ar 44100 \
               -f flv "rtmp://maa.contribute.live-video.net/app/$TWITCH_KEY" || true
             else
-              echo "Failed to get stream URL or stream ended."
+              echo "Failed to get stream URL. Retrying..."
             fi
 
             echo "Stream disconnected. Reconnecting in 10 seconds..."
